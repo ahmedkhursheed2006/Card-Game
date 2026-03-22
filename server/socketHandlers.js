@@ -3,15 +3,16 @@
  * Wires socket events to room/game logic and broadcasts state updates.
  */
 
-const { createRoom, joinRoom, leaveRoom, getRoom, getRoomBySocket, updateSettings } = require('./roomManager').default;
-const { startGame, drawCard, placeCard } = require('./gameLogic').default;
-const { getPlayerView } = require('./gameState').default;
+import { createRoom, joinRoom, leaveRoom, getRoom, getRoomBySocket, updateSettings, rejoinRoom } from './roomManager.js';
+import { startGame, drawCard, placeCard, advanceTurn } from './gameLogic.js';
+import { getPlayerView } from './gameState.js';
 
 /** 
- * Broadcast the current room state to every player in the room,
- * each receiving their own personalised view (own hand visible, others hidden).
- * @param {object} io  Socket.io server instance
- * @param {object} room
+ * Broadcasts the current room state securely to every connected player in that room.
+ * To prevent cheating, each player receives a "sanitized" view where opponents' hands are hidden.
+ * 
+ * @param {object} io - The global Socket.io server instance.
+ * @param {object} room - The canonical room state object to broadcast.
  */
 function broadcastState(io, room) {
   for (const player of room.players) {
@@ -21,20 +22,30 @@ function broadcastState(io, room) {
 }
 
 /**
- * Send an error back to a single socket.
+ * Utility: Sends a standardized error message back to the requesting client.
+ * Triggers the 'error_msg' listener on the frontend (usually resulting in an alert).
+ * 
+ * @param {object} socket - The specific socket connection that triggered the error.
+ * @param {string} message - The human-readable error description.
  */
 function sendError(socket, message) {
   socket.emit('error_msg', { message });
 }
 
 /**
- * Register all socket event handlers for a connected socket.
- * @param {object} io    Socket.io server
- * @param {object} socket  Individual connected socket
+ * Primary setup function. Wires all available game events to a newly connected socket.
+ * Acts as the bridge between network requests and the internal game/room logic.
+ * 
+ * @param {object} io - The global Socket.io server instance (used for broadcasting).
+ * @param {object} socket - The individual player's active socket connection.
  */
 function registerHandlers(io, socket) {
   // ── create_room ─────────────────────────────────────────────────
-  // Payload: { playerName: string }
+  /**
+   * Event: create_room
+   * Payload: { playerName: string }
+   * Logic: Validates name, creates a new room, makes the player the Admin, and joins the socket to the room channel.
+   */
   socket.on('create_room', ({ playerName } = {}) => {
     if (!playerName || !playerName.trim()) {
       return sendError(socket, 'Player name is required.');
@@ -47,7 +58,11 @@ function registerHandlers(io, socket) {
   });
 
   // ── join_room ────────────────────────────────────────────────────
-  // Payload: { roomCode: string, playerName: string }
+  /**
+   * Event: join_room
+   * Payload: { roomCode: string, playerName: string }
+   * Logic: Validates inputs, attempts to join the room via roomManager, and synchronizes state if successful.
+   */
   socket.on('join_room', ({ roomCode, playerName } = {}) => {
     if (!roomCode || !playerName || !playerName.trim()) {
       return sendError(socket, 'Room code and player name are required.');
@@ -65,7 +80,7 @@ function registerHandlers(io, socket) {
   socket.on('rejoin_game', ({ roomCode, playerName } = {}) => {
     if (!roomCode || !playerName) return sendError(socket, 'Room code and player name required.');
     
-    const { rejoinRoom } = require('./roomManager').default;
+    // rejoinRoom imported at top
     const result = rejoinRoom(roomCode, playerName, socket.id);
     if (!result.success) return sendError(socket, result.error);
 
@@ -75,7 +90,11 @@ function registerHandlers(io, socket) {
   });
 
   // ── update_settings ──────────────────────────────────────────────
-  // Payload: { roomCode: string, settings: { numDecks?, maxPlayers? } }
+  /**
+   * Event: update_settings
+   * Payload: { roomCode: string, settings: { numDecks?, maxPlayers? } }
+   * Logic: Restricts changes to the Admin only. Updates internal configs and broadcasts the new state to all lobby members.
+   */
   socket.on('update_settings', ({ roomCode, settings } = {}) => {
     const room = getRoom(roomCode);
     if (!room) return sendError(socket, 'Room not found.');
@@ -86,7 +105,11 @@ function registerHandlers(io, socket) {
   });
 
   // ── start_game ───────────────────────────────────────────────────
-  // Payload: { roomCode: string }
+  /**
+   * Event: start_game
+   * Payload: { roomCode: string }
+   * Logic: Validates Admin authority, minimum player count (2), and phase. Triggers the core game setup.
+   */
   socket.on('start_game', ({ roomCode } = {}) => {
     const room = getRoom(roomCode);
     if (!room) return sendError(socket, 'Room not found.');
@@ -99,6 +122,12 @@ function registerHandlers(io, socket) {
   });
 
   // ── draw_card ────────────────────────────────────────────────────
+  /**
+   * Event: draw_card
+   * Payload: { roomCode: string }
+   * Logic: Routes request to core game logic. If successful, emits 'card_drawn_flow' *specifically* 
+   * to trigger frontend animations, then broadcasts the updated game state.
+   */
   socket.on('draw_card', ({ roomCode } = {}) => {
     const room = getRoom(roomCode);
     if (!room) return sendError(socket, 'Room not found.');
@@ -116,6 +145,14 @@ function registerHandlers(io, socket) {
     broadcastState(io, room);
   });
 
+  // ── place_card ───────────────────────────────────────────────────
+  /**
+   * Event: place_card
+   * Payload: { roomCode: string, card: string }
+   * Logic: Routes card play to core logic. This is the most complex action, potentially triggering 
+   * massive state changes (stealing, matching, chains).
+   * Emits respective animation flags ('card_captured' or 'card_placed_flow') based on the result.
+   */
   socket.on('place_card', ({ roomCode, card } = {}) => {
     const room = getRoom(roomCode);
     if (!room) return sendError(socket, 'Room not found.');
@@ -143,11 +180,24 @@ function registerHandlers(io, socket) {
   });
 
   // ── disconnect ───────────────────────────────────────────────────
+  /**
+   * Event: disconnect (Built-in standard Socket.io event)
+   * Payload: None
+   * Logic: Handles sudden drops or tab closures. Uses 'leaveRoom' to determine if the player
+   * should be permanently purged (lobby/ended) or just marked 'offline' (during an active game).
+   */
   socket.on('disconnect', () => {
     const { room, roomCode, offline } = leaveRoom(socket.id);
     if (room && roomCode) {
       if (offline) {
         io.to(roomCode).emit('player_offline', { socketId: socket.id });
+        
+        // Skip their turn immediately if it was their turn when they disconnected
+        const currentPlayer = room.players[room.turnIndex];
+        if (currentPlayer && currentPlayer.id === socket.id) {
+          // advanceTurn imported at top
+          advanceTurn(room);
+        }
       } else {
         io.to(roomCode).emit('player_left', { socketId: socket.id });
       }
@@ -159,4 +209,4 @@ function registerHandlers(io, socket) {
   socket.on('ping_server', () => socket.emit('pong_server'));
 }
 
-module.exports = { registerHandlers };
+export { registerHandlers };
