@@ -1,0 +1,460 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+:root {
+  --primary: #2ecc71;
+  --primary-dark: #27ae60;
+  --bg-dark: #1a1a1a;
+  --bg-card: #2d2d2d;
+  --text-light: #f5f5f5;
+  --text-muted: #aaaaaa;
+  --accent: #e74c3c;
+  --gold: #f1c40f;
+  --felt-green: #34495e; /* Defaulting to something cleaner */
+  --felt-table: #1e5a2e;
+  --felt-shadow: #143d22;
+  --font-main: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+  --card-width: 80px;
+  --card-height: 112px;
+  --card-radius: 10px;
+}
+
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg-dark);
+  color: var(--text-light);
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+#root {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- Layout Utils --- */
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* --- UI Elements --- */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+}
+
+.title {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  text-align: center;
+  background: linear-gradient(to right, #2ecc71, #27ae60);
+  -webkit-background-clip: text;
+  background-clip: text; /* Standard property for compatibility */
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 10px 20px rgba(46, 204, 113, 0.2);
+}
+
+button {
+  padding: 12px 24px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+button:disabled {
+  background: #333;
+  color: #666;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+input {
+  padding: 14px 18px;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+  color: white;
+  outline: none;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+
+input:focus {
+  border-color: var(--primary);
+}
+
+/* --- Card Styles --- */
+.card-wrapper {
+  width: var(--card-width);
+  height: var(--card-height);
+  min-width: var(--card-width);
+  min-height: var(--card-height);
+  perspective: 1000px;
+  position: relative;
+}
+
+.card {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s;
+  transform-style: preserve-3d;
+  cursor: pointer;
+}
+
+.card.face-up {
+  transform: rotateY(0deg);
+}
+
+.card.face-down {
+  transform: rotateY(180deg);
+}
+
+.card-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  border-radius: var(--card-radius);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  background: #ffffff;
+}
+
+.card-face.front {
+  background: white;
+  transform: rotateY(0deg);
+}
+
+.card-face.back {
+  background-color: #1a1a1a !important;
+  background-image: url('/card-back.png') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  border: 2px solid var(--gold);
+  transform: rotateY(180deg);
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.card-logo {
+  font-weight: 800;
+  font-size: 0.8rem;
+  color: var(--gold);
+  background: rgba(0,0,0,0.6);
+  padding: 4px 8px;
+  border-radius: 4px;
+  letter-spacing: 2px;
+}
+
+.card.face-down .front { visibility: hidden; }
+.card.face-up .back { visibility: hidden; }
+
+.card-rank { font-size: 1.3rem; line-height: 1; font-weight: 800; }
+.card-suit-center { font-size: 2.2rem; align-self: center; line-height: 1; }
+.card-rank-bottom { transform: rotate(180deg); }
+
+.card.red { color: #e74c3c; }
+.card.black { color: #2c3e50; }
+
+.card-hover:hover {
+  transform: translateY(-20px) scale(1.1);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+  z-index: 100;
+}
+
+/* --- Game Layout --- */
+.game-container {
+  flex: 1;
+  display: flex;
+  background: #0d0d0d;
+  position: relative;
+}
+
+.felt-table {
+  flex: 1;
+  margin: 20px;
+  border-radius: 40px;
+  border: 8px solid rgba(255,255,255,0.05);
+  background: radial-gradient(circle at center, #1e5a2e 0%, #143d22 100%);
+  position: relative;
+  box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* --- Component Specifics --- */
+.center-pile {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  max-width: 400px;
+}
+
+.player-hand {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: -20px; /* Overlap */
+}
+
+/* Card overlap in hand */
+.hand-card {
+  margin-left: -20px;
+  transition: transform 0.2s;
+}
+.hand-card:first-child { margin-left: 0; }
+
+.score-stacks {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.score-stack {
+  position: absolute;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: row; /* Horizontal layout: Avatar then Stack */
+  align-items: center;
+  gap: 15px;
+  transition: all 0.8s ease; /* Slower transition */
+}
+
+.player-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: rgba(46, 204, 113, 0.2);
+  border: 3px solid rgba(255,255,255,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: white;
+  margin-bottom: 5px;
+  position: relative;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+.active-player-glow {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 20px var(--primary) !important;
+}
+
+.stack-owner {
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: rgba(0,0,0,0.7);
+  padding: 6px 16px;
+  border-radius: 20px;
+  white-space: nowrap;
+  letter-spacing: 1px;
+}
+
+.visual-stack {
+  position: relative;
+  width: var(--card-width);
+  height: var(--card-height);
+}
+
+.stacked-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition: transform 0.3s;
+}
+
+.stack-locked {
+  position: absolute;
+  top: -15px;
+  right: -15px;
+  width: 30px;
+  height: 30px;
+  background: var(--gold);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: black;
+  font-size: 1.2rem;
+  box-shadow: 0 4px 10px rgba(241, 196, 15, 0.4);
+  z-index: 2;
+  border: 2px solid white;
+}
+
+.lock-border {
+  border: 3px solid var(--gold) !important;
+  box-shadow: 0 0 20px rgba(241, 196, 15, 0.5) !important;
+}
+
+/* Positions for 4 players - Moved further out to avoid center overlap */
+.stack-self { bottom: 60px; left: 50%; transform: translateX(-50%); }
+.stack-left { left: 40px; top: 50%; transform: translateY(-50%) rotate(90deg); }
+.stack-top { top: 60px; left: 50%; transform: translateX(-50%) rotate(180deg); }
+.stack-right { right: 40px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
+
+.draw-pile {
+  position: absolute;
+  right: 50px;
+  top: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* --- HUD --- */
+.turn-banner {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 30px;
+  border-radius: 30px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  z-index: 50;
+  animation: slide-down 1s ease-out; /* Slower 1s */
+}
+
+.my-turn {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 10px 30px rgba(46, 204, 113, 0.4);
+}
+
+.player-avatar.player-offline {
+  filter: grayscale(1) opacity(0.6);
+  border-color: rgba(255,255,255,0.2);
+}
+
+.offline-badge {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ff4757;
+  color: white;
+  font-size: 0.6rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+.their-turn {
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.7);
+}
+
+@keyframes slide-down {
+  from { transform: translate(-50%, -100%); opacity: 0; }
+  to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+/* ANIMATION LAYER ITEMS */
+.capture-item {
+  position: absolute;
+  z-index: 9999;
+  pointer-events: none;
+  width: 80px;
+  height: 120px;
+  transform: translate(-50%, -50%); /* Start at exact center */
+}
+
+/* Generic Flow Animation */
+.anim-type-draw, .anim-type-place, .anim-type-capture {
+  animation: generic-flow 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* Specific Tweak: Capture scale down */
+.anim-type-capture {
+  animation: capture-flow 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes generic-flow {
+  0% {
+    transform: translate(calc(-50% + var(--fx)), calc(-50% + var(--fy))) rotate(0deg);
+    opacity: 1;
+    scale: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) rotate(360deg);
+    opacity: 0.8;
+    scale: 1;
+  }
+}
+
+@keyframes capture-flow {
+  0% {
+    transform: translate(calc(-50% + var(--fx)), calc(-50% + var(--fy))) rotate(0deg);
+    opacity: 1;
+    scale: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) rotate(720deg);
+    opacity: 0;
+    scale: 0.5;
+  }
+}
+
+/* Smooth Hand Transitions */
+.player-hand {
+  transition: all 0.5s ease-in-out;
+}
+.card-wrapper {
+  transition: transform 0.3s ease, margin 0.3s ease;
+}
+.card-wrapper:hover {
+  transform: translateY(-20px) scale(1.1);
+  z-index: 100 !important;
+}
