@@ -3,8 +3,8 @@
  * Handles room creation, player joining/leaving, and admin transfer.
  */
 
-const { v4: uuidv4 } = require('uuid');
-const { createRoomState, createPlayer } = require('./gameState');
+import { v4 as uuidv4 } from 'uuid';
+import { createRoomState, createPlayer } from './gameState';
 
 // Map<roomCode, roomState>
 const rooms = new Map();
@@ -141,4 +141,4 @@ function rejoinRoom(roomCode, playerName, newSocketId) {
   return { success: true, room };
 }
 
-module.exports = { createRoom, joinRoom, leaveRoom, getRoom, getRoomBySocket, updateSettings, rejoinRoom };
+export default { createRoom, joinRoom, leaveRoom, getRoom, getRoomBySocket, updateSettings, rejoinRoom };

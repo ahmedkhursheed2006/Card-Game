@@ -3,11 +3,11 @@
  * Wires socket events to room/game logic and broadcasts state updates.
  */
 
-const { createRoom, joinRoom, leaveRoom, getRoom, getRoomBySocket, updateSettings } = require('./roomManager');
-const { startGame, drawCard, placeCard } = require('./gameLogic');
-const { getPlayerView } = require('./gameState');
+const { createRoom, joinRoom, leaveRoom, getRoom, getRoomBySocket, updateSettings } = require('./roomManager').default;
+const { startGame, drawCard, placeCard } = require('./gameLogic').default;
+const { getPlayerView } = require('./gameState').default;
 
-/**
+/** 
  * Broadcast the current room state to every player in the room,
  * each receiving their own personalised view (own hand visible, others hidden).
  * @param {object} io  Socket.io server instance
@@ -65,7 +65,7 @@ function registerHandlers(io, socket) {
   socket.on('rejoin_game', ({ roomCode, playerName } = {}) => {
     if (!roomCode || !playerName) return sendError(socket, 'Room code and player name required.');
     
-    const { rejoinRoom } = require('./roomManager');
+    const { rejoinRoom } = require('./roomManager').default;
     const result = rejoinRoom(roomCode, playerName, socket.id);
     if (!result.success) return sendError(socket, result.error);
 

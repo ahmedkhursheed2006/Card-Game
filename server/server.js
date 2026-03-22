@@ -2,22 +2,22 @@
  * server.js — Express + Socket.io entry point for Khoti.
  */
 
-const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
-const cors = require('cors');
-const { registerHandlers } = require('./socketHandlers');
+import express, { json } from 'express';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import cors from 'cors';
+import { registerHandlers } from './socketHandlers';
 
 const PORT = process.env.PORT || 3001;
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(json());
 
 // Health check
 app.get('/health', (_req, res) => res.json({ status: 'ok', game: 'Khoti' }));
 
-const httpServer = http.createServer(app);
+const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
   cors: {
@@ -32,6 +32,6 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => console.log(`[-] Disconnected: ${socket.id}`));
 });
 
-httpServer.listen(PORT, () => {
+httpServer.listen(PORT, "0.0.0.0", () => {
   console.log(`✅  Khoti server running on http://localhost:${PORT}`);
 });
