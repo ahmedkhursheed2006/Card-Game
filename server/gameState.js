@@ -3,14 +3,16 @@
  * This is the single source of truth broadcast to all clients.
  */
 
-import { buildDeck, shuffle, getRank, totalScore, copiesPerRank } from './deck';
+import { buildDeck, shuffle, getRank, totalScore, copiesPerRank } from './deck.js';
 
 /**
- * Create a fresh room state.
- * @param {string} roomCode
- * @param {string} adminSocketId
- * @param {string} adminName
- * @returns {object} room state
+ * Factory function to create a pristine, new room state.
+ * Defines the entire schema for the room, including settings, players, and game phase.
+ * 
+ * @param {string} roomCode - The unique 6-character identifier for this room.
+ * @param {string} adminSocketId - The socket ID of the room creator.
+ * @param {string} adminName - The chosen display name of the room creator.
+ * @returns {object} A fully initialized room state object.
  */
 function createRoomState(roomCode, adminSocketId, adminName) {
   return {
@@ -36,11 +38,13 @@ function createRoomState(roomCode, adminSocketId, adminName) {
 }
 
 /**
- * Create a player object.
- * @param {string} socketId
- * @param {string} name
- * @param {boolean} isAdmin
- * @returns {object}
+ * Factory function to create a new player entity.
+ * Represents a single user playing in a specific room.
+ * 
+ * @param {string} socketId - The active socket connection ID for the player.
+ * @param {string} name - The display name of the player.
+ * @param {boolean} [isAdmin=false] - Whether this player has admin privileges (start game, change settings).
+ * @returns {object} A default player object schema.
  */
 function createPlayer(socketId, name, isAdmin = false) {
   return {
@@ -56,11 +60,14 @@ function createPlayer(socketId, name, isAdmin = false) {
 }
 
 /**
- * Initialize game state from the lobby state:
- * - Shuffle deck(s)
- * - Deal 4 cards to center table
- * - Deal 4 cards to each player's hand
- * @param {object} room  (mutates in place)
+ * Transforms a room from 'lobby' state into an active 'playing' state.
+ * Logic details:
+ * 1. Generates and shuffles a standard 52-card deck (multiplied by settings.numDecks).
+ * 2. Deals exactly 4 cards face-up to the center table.
+ * 3. Deals exactly 4 cards to every connected player's hand.
+ * 4. Resets all scores, stacks, logs, and turn indices.
+ * 
+ * @param {object} room - The room state object to be mutated into a playing state.
  */
 function initGameState(room) {
   const { numDecks } = room.settings;
@@ -89,8 +96,11 @@ function initGameState(room) {
 }
 
 /**
- * Recalculate all player scores from their scoreStacks.
- * @param {object} room  (mutates in place)
+ * Iterates through all players and recalculates their total scores.
+ * Typically invoked after a successful capture or at endgame.
+ * Score calculation relies on `totalScore` from deck.js.
+ * 
+ * @param {object} room - The room state object currently being modified.
  */
 function recalcScores(room) {
   for (const player of room.players) {
@@ -99,11 +109,14 @@ function recalcScores(room) {
 }
 
 /**
- * Build a sanitized view of state for a specific player.
- * Hides other players' hands (replaces with count), keeps everything else intact.
- * @param {object} room
- * @param {string} socketId — the requesting player's socket id
- * @returns {object}
+ * Builds a sanitized, safe-to-transmit view of the complete room state.
+ * Security: This is critical. It prevents cheating by hiding the exact cards in 
+ * opposing players' hands, replacing the actual array with just an integer length.
+ * The requesting player (socketId) receives their own hand in full.
+ * 
+ * @param {object} room - The canonical, complete server-side room state.
+ * @param {string} socketId - The specific socket ID of the client requesting the view.
+ * @returns {object} A sanitized copy of the room state tailored for the specific socket.
  */
 function getPlayerView(room, socketId) {
   return {
@@ -119,11 +132,14 @@ function getPlayerView(room, socketId) {
 }
 
 /**
- * Count all copies of a rank currently "in play" across the entire game:
- * draw deck + all hands + center table + all score stacks.
- * @param {object} room
- * @param {string} rank
- * @returns {number}
+ * Diagnostic helper: Counts all existing copies of a specific rank currently "in play".
+ * "In play" is defined as existing within the draw deck, center table, any player's hand, 
+ * or any player's score stack. 
+ * Useful for debugging card duplication or deletion loops.
+ * 
+ * @param {object} room - The active room state.
+ * @param {string} rank - The targeted rank (e.g., 'A', 'K', '10').
+ * @returns {number} The total integer count of the rank across all zones.
  */
 function countRankInGame(room, rank) {
   let count = 0;
@@ -141,7 +157,7 @@ function countRankInGame(room, rank) {
   return count;
 }
 
-export default {
+export {
   createRoomState,
   createPlayer,
   initGameState,

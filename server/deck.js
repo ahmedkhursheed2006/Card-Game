@@ -9,9 +9,11 @@ const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
 const SUITS = ['h', 'd', 'c', 's'];
 
 /**
- * Build one or more standard 52-card decks.
- * @param {number} numDecks
- * @returns {string[]} flat array of card strings
+ * Generates an array representing one or more standard 52-card decks.
+ * Includes all standard ranks (A-K) and suits (h, d, c, s).
+ * 
+ * @param {number} [numDecks=1] - The total number of full 52-card decks to combine.
+ * @returns {string[]} A single, un-shuffled array of card strings (e.g., ['Ah', 'Ad', ...]).
  */
 function buildDeck(numDecks = 1) {
   const singleDeck = [];
@@ -28,9 +30,11 @@ function buildDeck(numDecks = 1) {
 }
 
 /**
- * Fisher-Yates in-place shuffle.
- * @param {string[]} deck
- * @returns {string[]} shuffled deck (same reference)
+ * Randomizes the order of an array of cards in-place using the Fisher-Yates algorithm.
+ * Provides an unbiased, cryptographically robust shuffle.
+ * 
+ * @param {string[]} deck - The array of card strings to shuffle.
+ * @returns {string[]} The exact same array reference, now randomized.
  */
 function shuffle(deck) {
   for (let i = deck.length - 1; i > 0; i--) {
@@ -41,10 +45,12 @@ function shuffle(deck) {
 }
 
 /**
- * Extract the rank portion from a card string.
- * "10h" → "10", "Kd" → "K", "As" → "A"
- * @param {string} card
- * @returns {string}
+ * Utility: Extracts the rank component from a properly formatted card string.
+ * Logic: Card strings end with a single character for suit (e.g. 's' for Spades). 
+ * Everything before that last character is the rank (handles both 1-char lengths like 'K' and 2-char like '10').
+ * 
+ * @param {string} card - The card string (e.g., "10h", "Kd", "As").
+ * @returns {string} The rank extracted from the card (e.g., "10", "K", "A").
  */
 function getRank(card) {
   // Rank is everything except the last character (the suit)
@@ -52,19 +58,22 @@ function getRank(card) {
 }
 
 /**
- * Extract the suit from a card string.
- * @param {string} card
- * @returns {string}
+ * Utility: Extracts the suit component from a properly formatted card string.
+ * Logic: Returns strictly the very last character of the string.
+ * 
+ * @param {string} card - The card string.
+ * @returns {string} The physical suit ('h', 'd', 'c', or 's').
  */
 function getSuit(card) {
   return card.slice(-1);
 }
 
 /**
- * Point value of a card per the Khoti scoring rules.
- * Aces = 20, 2-9 = 5, 10/J/Q/K = 10
- * @param {string} card
- * @returns {number}
+ * Calculates the individual point value of a card according to Khoti game rules.
+ * Ruleset dictates simplified tracking: Aces are high-value (20), all others are base-value (10).
+ * 
+ * @param {string} card - The card to score.
+ * @returns {number} The integer point value of the card.
  */
 function getScore(card) {
   const rank = getRank(card);
@@ -73,21 +82,26 @@ function getScore(card) {
 }
 
 /**
- * Total score value for an array of cards.
- * @param {string[]} cards
- * @returns {number}
+ * Calculates the aggregate score of a complete array or stack of cards.
+ * Internally maps `getScore` to each item and sums the result.
+ * 
+ * @param {string[]} cards - An array of card strings.
+ * @returns {number} The total cumulative score.
  */
 function totalScore(cards) {
   return cards.reduce((sum, card) => sum + getScore(card), 0);
 }
 
 /**
- * Given numDecks, how many copies of each rank exist?
- * @param {number} numDecks
- * @returns {number} copies per rank (4 * numDecks)
+ * Dynamic calculation of rank scarcity.
+ * Computes how many total copies of a specific rank exist based on the room's multiplier.
+ * Used primarily for determining if a player has "locked" a specific rank.
+ * 
+ * @param {number} numDecks - The configured quantity of standard decks in play.
+ * @returns {number} Total count representing 100% domain of a single rank.
  */
 function copiesPerRank(numDecks) {
   return 4 * numDecks;
 }
 
-module.exports = { buildDeck, shuffle, getRank, getSuit, getScore, totalScore, copiesPerRank, RANKS, SUITS };
+export { buildDeck, shuffle, getRank, getSuit, getScore, totalScore, copiesPerRank, RANKS, SUITS };

@@ -1,7 +1,7 @@
 import React from 'react';
 import Card from './Card';
 
-const ScoreStack = ({ player, isSelf, isCurrentTurn, positionClass, animatingCards = [] }) => {
+const ScoreStack = ({ player, isSelf, isCurrentTurn, positionClass, dynamicStyle, animatingCards = [] }) => {
   const stack = (() => {
     const rawStack = player.scoreStack || [];
     const counts = {};
@@ -24,7 +24,7 @@ const ScoreStack = ({ player, isSelf, isCurrentTurn, positionClass, animatingCar
   const visualCards = stack.slice(-3);
 
   return (
-    <div className={`score-stack ${positionClass}`}>
+    <div className={`score-stack ${positionClass || ''}`} style={dynamicStyle}>
       {/* Avatar Container */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div className={`player-avatar ${isCurrentTurn ? 'active-player-glow' : ''} ${!player.connected ? 'player-offline' : ''}`}>

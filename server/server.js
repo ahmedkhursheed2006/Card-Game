@@ -6,9 +6,9 @@ import express, { json } from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
-import { registerHandlers } from './socketHandlers';
+import { registerHandlers } from './socketHandlers.js';
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3000;
 
 const app = express();
 app.use(cors());

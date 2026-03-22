@@ -147,19 +147,42 @@ const GameBoard = ({ room }) => {
 
         <div className="score-stacks">
           {orderedPlayers.map((player, idx) => {
-            let posClass = 'stack-self';
-            if (orderedPlayers.length === 2 && idx === 1) posClass = 'stack-top';
-            else if (idx === 1) posClass = 'stack-left';
-            else if (idx === 2) posClass = 'stack-top';
-            else if (idx === 3) posClass = 'stack-right';
+            if (idx === 0) {
+              return (
+                <ScoreStack 
+                  key={player.id} 
+                  player={player} 
+                  isSelf={true}
+                  isCurrentTurn={player.id === currentPlayer.id}
+                  positionClass="stack-self"
+                  animatingCards={animations.map(a => a.card)}
+                />
+              );
+            }
+
+            const numOpponents = orderedPlayers.length - 1;
+            let alpha = 90;
+            if (numOpponents === 2) {
+              alpha = idx === 1 ? 180 : 0;
+            } else if (numOpponents > 1) {
+              alpha = 180 - (180 * (idx - 1)) / (numOpponents - 1);
+            }
+            const rad = (alpha * Math.PI) / 180;
+            const tx = Math.cos(rad) * 42; 
+            const ty = -Math.sin(rad) * 38;
+            const rot = 270 - alpha;
 
             return (
               <ScoreStack 
                 key={player.id} 
                 player={player} 
-                isSelf={player.id === socket.id}
+                isSelf={false}
                 isCurrentTurn={player.id === currentPlayer.id}
-                positionClass={posClass}
+                dynamicStyle={{
+                  left: `calc(50% + ${tx}vw)`,
+                  top: `calc(50% + ${ty}vh)`,
+                  transform: `translate(-50%, -50%) rotate(${rot}deg)`
+                }}
                 animatingCards={animations.map(a => a.card)}
               />
             );
@@ -179,11 +202,21 @@ const GameBoard = ({ room }) => {
         const getPos = (idx) => {
           if (idx === -2) return { tx: '250px', ty: '-80px' }; // Deck (Relative to center)
           if (idx === -1) return { tx: '0px', ty: '0px' }; // Center
-          if (idx === 0) return { tx: '0px', ty: '380px' }; // Self (Hand)
-          if (idx === 1) return { tx: '-45vw', ty: '0px' }; // Left (Opponent)
-          if (idx === 2) return { tx: '0px', ty: '-380px' }; // Top (Opponent)
-          if (idx === 3) return { tx: '45vw', ty: '0px' }; // Right (Opponent)
-          return { tx: '0px', ty: '0px' };
+          if (idx === 0) return { tx: '0px', ty: '38vh' }; // Self (Hand)
+          
+          const numOpponents = orderedPlayers.length - 1;
+          let alpha = 90;
+          if (numOpponents === 2) {
+            alpha = idx === 1 ? 180 : 0;
+          } else if (numOpponents > 1) {
+            alpha = 180 - (180 * (idx - 1)) / (numOpponents - 1);
+          }
+          const rad = (alpha * Math.PI) / 180;
+          
+          return { 
+            tx: `${Math.cos(rad) * 42}vw`, 
+            ty: `${-Math.sin(rad) * 38}vh` 
+          };
         };
 
         const from = getPos(anim.fromIdx);

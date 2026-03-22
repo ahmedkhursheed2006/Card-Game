@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
 import { socket } from '../socket';
 
-const HomePage = () => {
+const HomePage = ({ fixedRoomCode }) => {
   const [name, setName] = useState(localStorage.getItem('khoti_player') || '');
-  const [code, setCode] = useState(localStorage.getItem('khoti_room') || '');
+  const [code, setCode] = useState(fixedRoomCode || '');
   const [error, setError] = useState('');
-  
-  const hasSession = localStorage.getItem('khoti_room') && localStorage.getItem('khoti_player');
 
   const handleCreate = () => {
     if (!name.trim()) return setError('Please enter your name');
@@ -24,15 +22,6 @@ const HomePage = () => {
     socket.emit('join_room', { roomCode: code.toUpperCase(), playerName: name });
   };
 
-  const handleRejoin = () => {
-    const r = localStorage.getItem('khoti_room');
-    const p = localStorage.getItem('khoti_player');
-    if (r && p) {
-      socket.connect();
-      socket.emit('rejoin_game', { roomCode: r, playerName: p });
-    }
-  };
-
   return (
     <div className="flex-center" style={{ height: '100vh', flexDirection: 'column' }}>
       <h1 className="title">KHOTI</h1>
@@ -48,25 +37,18 @@ const HomePage = () => {
           />
         </div>
 
-        <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '10px 0' }} />
-
-        {hasSession && (
-          <button 
-            onClick={handleRejoin} 
-            style={{ 
-              background: 'rgba(255, 107, 107, 0.2)', 
-              border: '2px solid var(--accent)',
-              color: 'var(--accent)',
-              fontWeight: 'bold'
-            }}
-          >
-            REJOIN LAST GAME ({localStorage.getItem('khoti_room')})
-          </button>
+        {/* Only show CREATE if we are NOT on a specific room URL */}
+        {!fixedRoomCode && (
+          <>
+            <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '10px 0' }} />
+            <button onClick={handleCreate}>CREATE NEW GAME</button>
+            <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>— OR JOIN —</div>
+          </>
         )}
 
-        <button onClick={handleCreate}>CREATE NEW GAME</button>
-
-        <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>— OR JOIN —</div>
+        {fixedRoomCode && (
+          <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '10px 0' }} />
+        )}
 
         <div style={{ display: 'flex', gap: '10px' }}>
           <input 
@@ -75,6 +57,7 @@ const HomePage = () => {
             placeholder="ROOM CODE" 
             value={code}
             onChange={(e) => setCode(e.target.value.toUpperCase())}
+            disabled={!!fixedRoomCode} // Lock the input if URL defines it
           />
           <button onClick={handleJoin}>JOIN</button>
         </div>
@@ -86,3 +69,4 @@ const HomePage = () => {
 };
 
 export default HomePage;
+
