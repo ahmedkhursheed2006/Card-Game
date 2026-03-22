@@ -8,7 +8,7 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 import { registerHandlers } from './socketHandlers';
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
 
 const app = express();
 app.use(cors());
