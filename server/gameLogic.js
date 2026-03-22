@@ -8,8 +8,8 @@
  *   4. If rank DOES NOT match -> PLACE on table -> TURN ENDS.
  */
 
-const { getRank, totalScore, copiesPerRank } = require('./deck');
-const { initGameState, recalcScores } = require('./gameState');
+import { getRank, totalScore, copiesPerRank } from './deck';
+import { initGameState, recalcScores } from './gameState';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -205,4 +205,4 @@ function checkLock(room, player, rank) {
   return false;
 }
 
-module.exports = { startGame, drawCard, placeCard, advanceTurn, checkEndgame, checkLock };
+export default { startGame, drawCard, placeCard, advanceTurn, checkEndgame, checkLock };

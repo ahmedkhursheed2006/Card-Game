@@ -3,7 +3,7 @@
  * This is the single source of truth broadcast to all clients.
  */
 
-const { buildDeck, shuffle, getRank, totalScore, copiesPerRank } = require('./deck');
+import { buildDeck, shuffle, getRank, totalScore, copiesPerRank } from './deck';
 
 /**
  * Create a fresh room state.
@@ -141,7 +141,7 @@ function countRankInGame(room, rank) {
   return count;
 }
 
-module.exports = {
+export default {
   createRoomState,
   createPlayer,
   initGameState,
