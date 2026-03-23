@@ -1,10 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { socket } from '../socket';
 
 const HomePage = ({ fixedRoomCode }) => {
-  const [name, setName] = useState(localStorage.getItem('khoti_player') || '');
+  const [name, setName] = useState(fixedRoomCode ? (localStorage.getItem('khoti_player') || '') : '');
   const [code, setCode] = useState(fixedRoomCode || '');
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (fixedRoomCode) {
+      setCode(fixedRoomCode);
+    }
+  }, [fixedRoomCode]);
 
   const handleCreate = () => {
     if (!name.trim()) return setError('Please enter your name');

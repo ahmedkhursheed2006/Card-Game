@@ -15,8 +15,10 @@ function AppContent() {
     const pathname = window.location.pathname;
     const roomIdFromUrl = pathname.length > 1 ? pathname.substring(1).toUpperCase() : null;
     const lastPlayer = localStorage.getItem('khoti_player');
+    const lastRoom = localStorage.getItem('khoti_room');
     
-    if (roomIdFromUrl && lastPlayer) {
+    // Only attempt rejoin if we have a saved name AND the saved room matches the URL
+    if (roomIdFromUrl && lastPlayer && lastRoom === roomIdFromUrl) {
       socket.emit('rejoin_game', { roomCode: roomIdFromUrl, playerName: lastPlayer });
     }
 
@@ -80,6 +82,7 @@ function HomeRoute() {
     // If they explicitly visit the home page, clear any stored room memory
     // so they are treated as a fresh new player.
     localStorage.removeItem('khoti_room');
+    localStorage.removeItem('khoti_player');
   }, []);
   
   return <HomePage />;

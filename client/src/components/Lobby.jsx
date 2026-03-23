@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { socket } from '../socket';
 
 const Lobby = ({ room }) => {
   const isAdmin = room.adminId === socket.id;
+  const [codeCopied, setCodeCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const handleStart = () => {
     socket.emit('start_game', { roomCode: room.roomCode });
@@ -11,6 +13,8 @@ const Lobby = ({ room }) => {
   const handleCopyCode = async () => {
     try {
       await navigator.clipboard.writeText(room.roomCode);
+      setCodeCopied(true);
+      setTimeout(() => setCodeCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy: ', err);
     }
@@ -19,9 +23,12 @@ const Lobby = ({ room }) => {
   const handleCopyLink = async () => {
     try {
       const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+      console.log(baseUrl);
       // Ensure the baseUrl doesn't have a trailing slash before appending the roomCode
       const link = `${baseUrl.replace(/\/$/, '')}/${room.roomCode}`;
       await navigator.clipboard.writeText(link);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy link: ', err);
     }
@@ -62,8 +69,12 @@ const Lobby = ({ room }) => {
                   onMouseOver={(e) => e.currentTarget.style.background = 'rgba(46, 204, 113, 0.2)'}
                   onMouseOut={(e) => e.currentTarget.style.background = 'rgba(46, 204, 113, 0.1)'}
                 >
-                  {room.roomCode}
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  {codeCopied ? 'COPIED!' : room.roomCode}
+                  {codeCopied ? (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  ) : (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  )}
                 </span>
               </p>
               
@@ -82,8 +93,17 @@ const Lobby = ({ room }) => {
                 }}
                 title="Copy full invite link"
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-                Copy Link
+                {linkCopied ? (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                    Copy Link
+                  </>
+                )}
               </button>
             </div>
           </div>
