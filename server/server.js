@@ -2,13 +2,14 @@
  * server.js — Express + Socket.io entry point for Khoti.
  */
 
+import 'dotenv/config';
 import express, { json } from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import { registerHandlers } from './socketHandlers.js';
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 
 const app = express();
 app.use(cors());
