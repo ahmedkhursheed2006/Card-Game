@@ -197,7 +197,7 @@ input:focus {
 .card.black { color: #2c3e50; }
 
 .card-hover:hover {
-  transform: translateY(-20px) scale(1.1);
+  transform: translateY(-2px) scale(1.05);
   box-shadow: 0 15px 35px rgba(0,0,0,0.6);
   z-index: 100;
 }
@@ -335,7 +335,7 @@ input:focus {
 }
 
 /* Positions for 4 players - Moved further out to avoid center overlap */
-.stack-self { bottom: 60px; left: 50%; transform: translateX(-50%); }
+.stack-self { bottom: 0px; left: 30%; transform: translateX(-80%); }
 .stack-left { left: 40px; top: 50%; transform: translateY(-50%) rotate(90deg); }
 .stack-top { top: 60px; left: 50%; transform: translateX(-50%) rotate(180deg); }
 .stack-right { right: 40px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
@@ -353,7 +353,7 @@ input:focus {
 /* --- HUD --- */
 .turn-banner {
   position: absolute;
-  top: 20px;
+  top: 0px;
   left: 50%;
   transform: translateX(-50%);
   padding: 12px 30px;
@@ -362,7 +362,7 @@ input:focus {
   text-transform: uppercase;
   letter-spacing: 2px;
   z-index: 50;
-  animation: slide-down 1s ease-out; /* Slower 1s */
+  animation: slide-down 3s ease-out; /* Slower 1s */
 }
 
 .my-turn {
@@ -413,12 +413,12 @@ input:focus {
 
 /* Generic Flow Animation */
 .anim-type-draw, .anim-type-place, .anim-type-capture {
-  animation: generic-flow 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  animation: generic-flow 3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 /* Specific Tweak: Capture scale down */
 .anim-type-capture {
-  animation: capture-flow 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: capture-flow 3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 @keyframes generic-flow {
@@ -455,6 +455,6 @@ input:focus {
   transition: transform 0.3s ease, margin 0.3s ease;
 }
 .card-wrapper:hover {
-  transform: translateY(-20px) scale(1.1);
+  transform: translateY(-20px) scale(1.05);
   z-index: 100 !important;
 }

@@ -23,7 +23,6 @@ const Lobby = ({ room }) => {
   const handleCopyLink = async () => {
     try {
       const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
-      console.log(baseUrl);
       // Ensure the baseUrl doesn't have a trailing slash before appending the roomCode
       const link = `${baseUrl.replace(/\/$/, '')}/${room.roomCode}`;
       await navigator.clipboard.writeText(link);

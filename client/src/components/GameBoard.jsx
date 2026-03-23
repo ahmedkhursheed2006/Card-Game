@@ -169,7 +169,7 @@ const GameBoard = ({ room }) => {
             }
             const rad = (alpha * Math.PI) / 180;
             const tx = Math.cos(rad) * 42; 
-            const ty = -Math.sin(rad) * 38;
+            const ty = -Math.sin(rad) * 32;
             const rot = 270 - alpha;
 
             return (
