@@ -37,7 +37,7 @@ const ScoreStack = ({ player, isSelf, isCurrentTurn, positionClass, dynamicStyle
       </div>
 
       {/* Visual Stack to the RIGHT of the avatar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '30px' }}>
         <div className="visual-stack">
           {stack.length === 0 ? (
             <div className="card-face back" style={{ border: '2px dashed rgba(255,255,255,0.1)', opacity: 0.3, backgroundImage: 'none' }}>
