@@ -21,6 +21,7 @@ function createRoomState(roomCode, adminSocketId, adminName) {
     phase: 'lobby',         // 'lobby' | 'playing' | 'ended'
     settings: {
       numDecks: 1,
+      deckDeal: 4,
       maxPlayers: 4,
     },
     players: [
@@ -65,20 +66,20 @@ function createPlayer(socketId, name, isAdmin = false) {
  * 1. Generates and shuffles a standard 52-card deck (multiplied by settings.numDecks).
  * 2. Deals exactly 4 cards face-up to the center table.
  * 3. Deals exactly 4 cards to every connected player's hand.
- * 4. Resets all scores, stacks, logs, and turn indices.
+ * 4. Resets all scores, stacks, logs, and turn indices. 
  * 
  * @param {object} room - The room state object to be mutated into a playing state.
  */
 function initGameState(room) {
-  const { numDecks } = room.settings;
+  const { numDecks, deckDeal } = room.settings;
   const deck = shuffle(buildDeck(numDecks));
 
   // Deal 4 cards face-up to the center table
-  room.centerTable = deck.splice(0, 4);
+  room.centerTable = deck.splice(0, deckDeal);
 
   // Deal 4 cards to each player
   for (const player of room.players) {
-    player.hand = deck.splice(0, 4);
+    player.hand = deck.splice(0, deckDeal);
     player.scoreStack = [];
     player.lockedRanks = [];
     player.score = 0;
