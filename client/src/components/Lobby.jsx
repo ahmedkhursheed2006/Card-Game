@@ -40,6 +40,13 @@ const Lobby = ({ room }) => {
     });
   };
 
+  const updateDeckDeal = (val) => {
+    socket.emit('update_settings', { 
+      roomCode: room.roomCode, 
+      settings: { deckDeal: parseInt(val) } 
+    });
+  };
+
   return (
     <div className="flex-center" style={{ height: '100vh', flexDirection: 'column' }}>
       <div className="glass" style={{ width: '100%', maxWidth: '500px' }}>
@@ -131,12 +138,12 @@ const Lobby = ({ room }) => {
               <input 
                 type="range" 
                 min="1" 
-                max="4" 
+                max="5" 
                 value={room.settings.numDecks} 
                 onChange={(e) => updateDecks(e.target.value)}
                 style={{ width: '100%', cursor: 'pointer' }}
               />
-            </div>
+            </div> 
             <div>
               <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '10px' }}>MAX PLAYERS: {room.settings.maxPlayers}</label>
               <input 
@@ -145,6 +152,17 @@ const Lobby = ({ room }) => {
                 max="10" 
                 value={room.settings.maxPlayers} 
                 onChange={(e) => socket.emit('update_settings', { roomCode: room.roomCode, settings: { maxPlayers: parseInt(e.target.value) } })}
+                style={{ width: '100%', cursor: 'pointer' }}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '10px' }}>Starting Cards: {room.settings.deckDeal}</label>
+              <input 
+                type="range" 
+                min="4" 
+                max="10" 
+                value={room.settings.deckDeal}
+                onChange={(e) => updateDeckDeal(e.target.value)}
                 style={{ width: '100%', cursor: 'pointer' }}
               />
             </div>

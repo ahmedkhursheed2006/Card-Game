@@ -157,7 +157,8 @@ function getRoomBySocket(socketId) {
 function updateSettings(roomCode, settings) {
   const room = rooms.get(roomCode.toUpperCase());
   if (!room || room.phase !== 'lobby') return false;
-  if (settings.numDecks !== undefined) room.settings.numDecks = Math.max(1, Math.min(4, settings.numDecks));
+  if (settings.numDecks !== undefined) room.settings.numDecks = Math.max(1, Math.min(5, settings.numDecks));
+  if (settings.deckDeal !== undefined) room.settings.deckDeal = Math.max(4, Math.min(10, settings.deckDeal));
   if (settings.maxPlayers !== undefined) room.settings.maxPlayers = Math.max(2, Math.min(10, settings.maxPlayers));
   return true;
 }
