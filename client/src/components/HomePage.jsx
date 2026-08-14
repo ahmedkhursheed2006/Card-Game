@@ -19,6 +19,13 @@ const HomePage = ({ fixedRoomCode }) => {
     socket.emit('create_room', { playerName: name });
   };
 
+  const handleSinglePlayer = () => {
+    if (!name.trim()) return setError('Please enter your name');
+    localStorage.setItem('khoti_player', name.trim());
+    socket.connect();
+    socket.emit('create_single_player', { playerName: name });
+  };
+
   const handleJoin = () => {
     if (!name.trim()) return setError('Please enter your name');
     if (!code.trim()) return setError('Please enter a room code');
@@ -47,7 +54,12 @@ const HomePage = ({ fixedRoomCode }) => {
         {!fixedRoomCode && (
           <>
             <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)', margin: '10px 0' }} />
-            <button onClick={handleCreate}>CREATE NEW GAME</button>
+            <button onClick={handleSinglePlayer} style={{ background: 'linear-gradient(135deg, #8e44ad, #3498db)', boxShadow: '0 4px 15px rgba(142, 68, 173, 0.4)' }}>
+              SINGLE PLAYER (VS BOTS) 🤖
+            </button>
+            <button onClick={handleCreate} style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)' }}>
+              CREATE MULTIPLAYER ROOM
+            </button>
             <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>— OR JOIN —</div>
           </>
         )}

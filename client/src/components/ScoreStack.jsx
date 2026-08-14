@@ -27,8 +27,8 @@ const ScoreStack = ({ player, isSelf, isCurrentTurn, positionClass, dynamicStyle
     <div className={`score-stack ${positionClass || ''}`} style={dynamicStyle}>
       {/* Avatar Container */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <div className={`player-avatar ${isCurrentTurn ? 'active-player-glow' : ''} ${!player.connected ? 'player-offline' : ''}`}>
-          {player.name[0].toUpperCase()}
+        <div className={`player-avatar ${isCurrentTurn ? 'active-player-glow' : ''} ${!player.connected ? 'player-offline' : ''}`} style={player.isBot ? { background: 'linear-gradient(135deg, #8e44ad, #2980b9)' } : {}}>
+          {player.isBot ? '🤖' : player.name[0].toUpperCase()}
           {!player.connected && <div className="offline-badge">OFFLINE</div>}
         </div>
         <div className="stack-owner">

@@ -96,7 +96,7 @@ const Scoreboard = ({ room }) => {
                     {isWinnerItem ? '👑' : `#${i + 1}`}
                   </span>
                   <span style={{ fontWeight: 700, fontSize: '1.05rem' }}>
-                    {p.name} {p.id === socket.id ? '(YOU)' : ''}
+                    {p.name} {p.isBot ? '🤖' : ''} {p.id === socket.id ? '(YOU)' : ''}
                   </span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

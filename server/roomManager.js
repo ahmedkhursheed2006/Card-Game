@@ -216,4 +216,51 @@ function rejoinRoom(roomCode, playerName, newSocketId) {
   return { success: true, room };
 }
 
-export { createRoom, joinRoom, leaveRoom, getRoom, getRoomBySocket, updateSettings, rejoinRoom };
+const BOT_NAMES = ['Bot Alpha', 'Bot Beta', 'Bot Gamma', 'Bot Delta', 'Bot Echo', 'Bot Falcon', 'Bot Giga', 'Bot Turbo'];
+
+/**
+ * Adds an AI bot player to the lobby.
+ * 
+ * @param {string} roomCode 
+ * @returns {{ success: boolean, room?: object, bot?: object, error?: string }}
+ */
+function addBot(roomCode) {
+  const room = rooms.get(roomCode.toUpperCase());
+  if (!room) return { success: false, error: 'Room not found.' };
+  if (room.phase !== 'lobby') return { success: false, error: 'Cannot add bots while game is in progress.' };
+  if (room.players.length >= room.settings.maxPlayers) return { success: false, error: 'Room is full.' };
+
+  const existingNames = new Set(room.players.map(p => p.name));
+  let botName = BOT_NAMES.find(name => !existingNames.has(name));
+  if (!botName) {
+    botName = `Bot ${room.players.length + 1}`;
+  }
+
+  const botId = `bot_${uuidv4().substring(0, 8)}`;
+  const botPlayer = createPlayer(botId, botName, false, true);
+  room.players.push(botPlayer);
+
+  return { success: true, room, bot: botPlayer };
+}
+
+/**
+ * Removes an AI bot player from the lobby.
+ * 
+ * @param {string} roomCode 
+ * @param {string} botId 
+ * @returns {{ success: boolean, room?: object, error?: string }}
+ */
+function removeBot(roomCode, botId) {
+  const room = rooms.get(roomCode.toUpperCase());
+  if (!room) return { success: false, error: 'Room not found.' };
+  if (room.phase !== 'lobby') return { success: false, error: 'Cannot remove bots while game is in progress.' };
+
+  const idx = room.players.findIndex(p => p.id === botId && p.isBot);
+  if (idx === -1) return { success: false, error: 'Bot not found.' };
+
+  room.players.splice(idx, 1);
+  return { success: true, room };
+}
+
+export { createRoom, joinRoom, leaveRoom, getRoom, getRoomBySocket, updateSettings, rejoinRoom, addBot, removeBot };
+
