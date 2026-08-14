@@ -97,6 +97,8 @@ function leaveRoom(socketId) {
 
     const wasAdmin = room.adminId === socketId;
     
+    /*
+    OLD CODE (Deleted player immediately if phase !== 'playing', breaking refresh in lobby/ended):
     if (room.phase === 'playing') {
       // Don't remove, just mark offline
       const p = room.players[playerIndex];
@@ -117,6 +119,20 @@ function leaveRoom(socketId) {
     }
 
     return { room, roomCode, wasAdmin };
+    */
+
+    // NEW CODE: Mark player offline across all phases so refreshing page auto-rejoins seamlessly
+    const p = room.players[playerIndex];
+    p.connected = false;
+
+    // Clean up room only if all players are offline
+    const allOffline = room.players.every(pl => !pl.connected);
+    if (allOffline) {
+      rooms.delete(roomCode);
+      return { room: null, roomCode, wasAdmin };
+    }
+
+    return { room, roomCode, wasAdmin, offline: true };
   }
   return { room: null, roomCode: null, wasAdmin: false };
 }
@@ -160,6 +176,8 @@ function updateSettings(roomCode, settings) {
   if (settings.numDecks !== undefined) room.settings.numDecks = Math.max(1, Math.min(5, settings.numDecks));
   if (settings.deckDeal !== undefined) room.settings.deckDeal = Math.max(4, Math.min(10, settings.deckDeal));
   if (settings.maxPlayers !== undefined) room.settings.maxPlayers = Math.max(2, Math.min(10, settings.maxPlayers));
+  if (settings.useJokers !== undefined) room.settings.useJokers = Boolean(settings.useJokers);
+  if (settings.theme !== undefined) room.settings.theme = settings.theme;
   return true;
 }
 

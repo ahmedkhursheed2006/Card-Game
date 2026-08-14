@@ -40,6 +40,52 @@ body {
   flex-direction: column;
 }
 
+/* --- Mobile Landscape Enforcement --- */
+.portrait-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: var(--bg-dark);
+  z-index: 99999;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  text-align: center;
+  padding: 20px;
+}
+
+.portrait-overlay-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  animation: rotate-phone 2s infinite ease-in-out;
+}
+
+@keyframes rotate-phone {
+  0% { transform: rotate(0deg); }
+  50% { transform: rotate(-90deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@media screen and (max-width: 900px) and (orientation: portrait) {
+  .portrait-overlay {
+    display: flex;
+  }
+}
+
+/* ── Themed Backgrounds ────────────────────────────────────────────────────── */
+/* NOTE: Room Theme feature was removed. Keeping these commented out for reference
+   in case the feature is re-introduced in a future update. */
+/*
+.theme-nature  { background: linear-gradient(135deg, #134e5e 0%, #71b280 100%) !important; }
+.theme-anime   { background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%) !important; }
+.theme-netflix { background: linear-gradient(135deg, #e50914 0%, #221f1f 100%) !important; }
+.theme-dark    { background: #0d0d0d !important; }
+*/
+
 /* --- Layout Utils --- */
 .flex-center {
   display: flex;
@@ -353,7 +399,7 @@ input:focus {
 /* --- HUD --- */
 .turn-banner {
   position: absolute;
-  top: 0px;
+  top: 10px;
   left: 50%;
   transform: translateX(-50%);
   padding: 12px 30px;
@@ -457,4 +503,100 @@ input:focus {
 .card-wrapper:hover {
   transform: translateY(-20px) scale(1.05);
   z-index: 100 !important;
+}
+
+/* ── Turn Banner Shake Animation ─────────────────────────────────────────────
+   Triggered when a player clicks a card while it is not their turn.
+   Applied via the .shake class, which is added/removed by TurnIndicator. */
+@keyframes banner-shake {
+  0%,  100% { transform: translateX(-50%); }
+  15%       { transform: translateX(calc(-50% - 9px)); }
+  30%       { transform: translateX(calc(-50% + 9px)); }
+  45%       { transform: translateX(calc(-50% - 6px)); }
+  60%       { transform: translateX(calc(-50% + 6px)); }
+  75%       { transform: translateX(calc(-50% - 3px)); }
+  90%       { transform: translateX(calc(-50% + 3px)); }
+}
+
+.turn-banner.shake {
+  /* Override the normal slide-down or static state with the shake */
+  animation: banner-shake 0.5s ease-in-out !important;
+}
+
+/* ── Dealing Animation Overlay ───────────────────────────────────────────────
+   The DealingAnimation component uses these classes for the flying card
+   and the land effect when a card reaches its destination. */
+
+/*
+OLD CODE (rapid single-step fly):
+.dealing-card-fly {
+  position: fixed;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 9999;
+  animation: dealing-fly var(--fly-duration, 500ms) cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes dealing-fly {
+  from {
+    left:    var(--from-x);
+    top:     var(--from-y);
+    opacity: 0.85;
+    scale:   0.9;
+  }
+  55% {
+    opacity: 1;
+    scale:   1.08;
+  }
+  to {
+    left:    var(--to-x);
+    top:     var(--to-y);
+    opacity: 1;
+    scale:   1;
+  }
+}
+*/
+
+/* NEW CODE: Fluid, smooth physics-based card dealing motion */
+.dealing-card-fluid {
+  position: fixed;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 9999;
+  animation: dealing-fluid-glide var(--duration, 500ms) cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  filter: drop-shadow(0 12px 24px rgba(0,0,0,0.5));
+}
+
+.dealing-card-fluid.reveal-pulse {
+  animation: dealing-fluid-glide var(--duration, 350ms) cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes dealing-fluid-glide {
+  0% {
+    left:    var(--from-x);
+    top:     var(--from-y);
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(-12deg) scale(0.92);
+  }
+  60% {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(4deg) scale(1.06);
+  }
+  100% {
+    left:    var(--to-x);
+    top:     var(--to-y);
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(0deg) scale(1);
+  }
+}
+
+/* Pop-in effect for a card that has just landed at its destination */
+@keyframes card-land {
+  from { opacity: 0; scale: 0.6; }
+  70%  { scale: 1.12; }
+  to   { opacity: 1; scale: 1; }
+}
+
+.card-land {
+  animation: card-land 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }

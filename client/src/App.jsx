@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useParams } from 'react-router-dom';
 import { socket } from './socket';
 import HomePage from './components/HomePage';
 import Lobby from './components/Lobby';
 import GameBoard from './components/GameBoard';
 import Scoreboard from './components/Scoreboard';
+import { ToastContainer } from './components/Toast';
 
-function AppContent() {
+function AppContent({ addToast }) {
   const [room, setRoom] = useState(null);
   const navigate = useNavigate();
 
@@ -17,9 +18,24 @@ function AppContent() {
     const lastPlayer = localStorage.getItem('khoti_player');
     const lastRoom = localStorage.getItem('khoti_room');
     
-    // Only attempt rejoin if we have a saved name AND the saved room matches the URL
+    /*
+    OLD CODE (Emitted rejoin_game while socket was disconnected due to autoConnect: false):
     if (roomIdFromUrl && lastPlayer && lastRoom === roomIdFromUrl) {
       socket.emit('rejoin_game', { roomCode: roomIdFromUrl, playerName: lastPlayer });
+    }
+    */
+    // NEW CODE: Ensure socket is connected first, then emit rejoin_game
+    if (roomIdFromUrl && lastPlayer && lastRoom === roomIdFromUrl) {
+      const emitRejoin = () => {
+        socket.emit('rejoin_game', { roomCode: roomIdFromUrl, playerName: lastPlayer });
+      };
+
+      if (socket.connected) {
+        emitRejoin();
+      } else {
+        socket.connect();
+        socket.once('connect', emitRejoin);
+      }
     }
 
     socket.on('game_state', (state) => {
@@ -48,11 +64,28 @@ function AppContent() {
     });
 
     socket.on('error_msg', (data) => {
+      /* OLD CODE (alert popup blocks UI):
       alert(data.message);
       if (data.message.includes('not found') || data.message.includes('not in this room')) {
         localStorage.removeItem('khoti_room');
         navigate('/');
       }
+      */
+      // NEW CODE: Use toast notification instead of native alert
+      addToast(data.message, 'error');
+      if (data.message.includes('not found') || data.message.includes('not in this room')) {
+        localStorage.removeItem('khoti_room');
+        navigate('/');
+      }
+    });
+
+    // NEW CODE: Listen for player offline/leave socket events to inform remaining players
+    socket.on('player_offline', (data) => {
+      addToast('A player went offline', 'info');
+    });
+
+    socket.on('player_left', (data) => {
+      addToast('A player left the room', 'info');
     });
 
     socket.on('connect_error', () => {
@@ -65,9 +98,11 @@ function AppContent() {
       socket.off('room_joined');
       socket.off('room_rejoined');
       socket.off('error_msg');
+      socket.off('player_offline');
+      socket.off('player_left');
       socket.off('connect_error');
     };
-  }, [navigate]);
+  }, [navigate, addToast]);
 
   return (
     <Routes>
@@ -104,10 +139,29 @@ function RoomRoute({ room }) {
 }
 
 function App() {
+  const [toasts, setToasts] = useState([]);
+
+  const addToast = useCallback((message, type = 'info') => {
+    const id = `${Date.now()}-${Math.random()}`;
+    setToasts(prev => [...prev, { id, message, type }]);
+  }, []);
+
+  const removeToast = useCallback((id) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  }, []);
+
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <>
+      <ToastContainer toasts={toasts} onDismiss={removeToast} />
+      <div className="portrait-overlay">
+        <div className="portrait-overlay-icon">📱</div>
+        <h2>Please Rotate Your Device</h2>
+        <p>Khoti is best played in landscape mode.</p>
+      </div>
+      <Router>
+        <AppContent addToast={addToast} />
+      </Router>
+    </>
   );
 }
 

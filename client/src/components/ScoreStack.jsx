@@ -32,7 +32,7 @@ const ScoreStack = ({ player, isSelf, isCurrentTurn, positionClass, dynamicStyle
           {!player.connected && <div className="offline-badge">OFFLINE</div>}
         </div>
         <div className="stack-owner">
-          {player.name} • {player.score}
+          {player.name.length > 10 ? player.name.substring(0, 10) + '...' : player.name} • {player.score}
         </div>
       </div>
 

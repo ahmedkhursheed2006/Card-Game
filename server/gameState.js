@@ -23,6 +23,8 @@ function createRoomState(roomCode, adminSocketId, adminName) {
       numDecks: 1,
       deckDeal: 4,
       maxPlayers: 4,
+      useJokers: false,
+      theme: 'dark',
     },
     players: [
       createPlayer(adminSocketId, adminName, true),
@@ -71,8 +73,8 @@ function createPlayer(socketId, name, isAdmin = false) {
  * @param {object} room - The room state object to be mutated into a playing state.
  */
 function initGameState(room) {
-  const { numDecks, deckDeal } = room.settings;
-  const deck = shuffle(buildDeck(numDecks));
+  const { numDecks, deckDeal, useJokers } = room.settings;
+  const deck = shuffle(buildDeck(numDecks, useJokers));
 
   // Deal 4 cards face-up to the center table
   room.centerTable = deck.splice(0, deckDeal);
@@ -88,7 +90,12 @@ function initGameState(room) {
   // Shuffle and set draw deck
   room.drawDeck = deck;
   room.phase = 'playing';
+  /*
+  OLD CODE (Creator/admin always starts first):
   room.turnIndex = 0;
+  */
+  // NEW CODE: Random player starts the game
+  room.turnIndex = Math.floor(Math.random() * room.players.length);
   room.turnPhase = 'draw';
   room.lastDrawnCard = null;
   room.captureLog = [];
@@ -100,12 +107,40 @@ function initGameState(room) {
  * Iterates through all players and recalculates their total scores.
  * Typically invoked after a successful capture or at endgame.
  * Score calculation relies on `totalScore` from deck.js.
- * 
+ *
  * @param {object} room - The room state object currently being modified.
  */
 function recalcScores(room) {
   for (const player of room.players) {
     player.score = totalScore(player.scoreStack);
+  }
+}
+
+/**
+ * Resets an 'ended' room back to 'lobby' phase for a rematch / Play Again.
+ * Preserves: players array, admin assignment, room code, and all settings.
+ * Clears:    hands, score stacks, scores, locked ranks, deck, table, and logs.
+ * All players are re-marked as connected so nobody appears offline at the start.
+ *
+ * @param {object} room - The ended room state object to reset.
+ */
+function resetToLobby(room) {
+  room.phase         = 'lobby';
+  room.drawDeck      = [];
+  room.centerTable   = [];
+  room.turnIndex     = 0;
+  room.turnPhase     = 'draw';
+  room.lastDrawnCard = null;
+  room.captureLog    = [];
+  room.winner        = null;
+  room.loser         = null;
+
+  for (const player of room.players) {
+    player.hand        = [];
+    player.scoreStack  = [];
+    player.lockedRanks = [];
+    player.score       = 0;
+    player.connected   = true; // Re-mark all as connected so nobody starts as offline
   }
 }
 
@@ -122,6 +157,8 @@ function recalcScores(room) {
 function getPlayerView(room, socketId) {
   return {
     ...room,
+    // Send only the count, not the full deck array — saves significant bandwidth
+    drawDeck: room.drawDeck.length,
     players: room.players.map(p => {
       if (p.id === socketId) return { ...p }; // full hand for self
       return {
@@ -163,6 +200,7 @@ export {
   createPlayer,
   initGameState,
   recalcScores,
+  resetToLobby,
   getPlayerView,
   countRankInGame,
 };

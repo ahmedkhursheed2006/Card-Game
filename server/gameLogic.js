@@ -101,9 +101,10 @@ function placeCard(room, playerId, cardToPlay) {
   if (cardIndex === -1) return { success: false, error: 'Card not in hand.' };
 
   const rank = getRank(cardToPlay);
+  const isJoker = rank === 'JOKER';
   
   // 2. Identify Matches on the Center Table
-  const tableMatches = findMatches(room.centerTable, rank);
+  const tableMatches = isJoker ? [...room.centerTable] : findMatches(room.centerTable, rank);
   
   // 3. Identify Matches on Opponents' Stacks (Stealing mechanics)
   // Iterates through every player to find valid opponent stacks matching the played rank.
@@ -111,14 +112,19 @@ function placeCard(room, playerId, cardToPlay) {
   for (const opponent of room.players) {
     if (opponent.id === playerId) continue; // Conditional: Cannot steal from self
     if (opponent.scoreStack.length === 0) continue; // Conditional: Ignore empty stacks
-    if (opponent.lockedRanks.includes(rank)) continue; // Conditional: Cannot steal if opponent secured all copies
+    
+    const topCard = opponent.scoreStack[opponent.scoreStack.length - 1];
+    const targetRank = isJoker ? getRank(topCard) : rank;
+
+    if (!isJoker && opponent.lockedRanks.includes(rank)) continue; // Conditional: Cannot steal if opponent secured all copies
+    if (isJoker && opponent.lockedRanks.includes(targetRank)) continue;
 
     const capturedFromThisOpponent = [];
     // Stealing Logic: Peek at opponent's top card. If rank matches, pop it.
     // Repeat downwards until the rank changes, capturing all matching consecutive cards.
     while (opponent.scoreStack.length > 0) {
-      const topCard = opponent.scoreStack[opponent.scoreStack.length - 1];
-      if (getRank(topCard) === rank) {
+      const currentTopCard = opponent.scoreStack[opponent.scoreStack.length - 1];
+      if (getRank(currentTopCard) === targetRank && (isJoker || getRank(currentTopCard) === rank)) {
         capturedFromThisOpponent.push(opponent.scoreStack.pop());
       } else {
         break; // Stop stealing when rank differs
@@ -136,9 +142,10 @@ function placeCard(room, playerId, cardToPlay) {
   }
 
   // 4. Check against OWN stack rank (Self-Stacking logic)
+  // Jokers cannot self-stack since they have no singular rank.
   // Allows player to add a card to their own stack directly if the top card has the same rank.
   let selfStackMatch = false;
-  if (player.scoreStack.length > 0) {
+  if (!isJoker && player.scoreStack.length > 0) {
     const topCard = player.scoreStack[player.scoreStack.length - 1];
     if (getRank(topCard) === rank && !player.lockedRanks.includes(rank)) {
       selfStackMatch = true;
@@ -166,8 +173,8 @@ function placeCard(room, playerId, cardToPlay) {
     player.scoreStack.push(...capturedCards);
     recalcScores(room);
     
-    // Security check: Did this capture lock the rank? (Player owns all copies)
-    checkLock(room, player, rank);
+    // Security check: Did this capture lock the rank? (Only for regular cards)
+    if (!isJoker) checkLock(room, player, rank);
 
     // Logging for frontend animation consumption
     room.captureLog.push({
@@ -179,6 +186,8 @@ function placeCard(room, playerId, cardToPlay) {
       selfStacked: selfStackMatch,
       timestamp: Date.now()
     });
+    // Keep captureLog bounded to the last 50 events to prevent memory growth
+    if (room.captureLog.length > 50) room.captureLog.shift();
 
     // ── Conditional Turn Chaining ──
     // Logic: If a player matches, they "chain" their turn to draw and play again.

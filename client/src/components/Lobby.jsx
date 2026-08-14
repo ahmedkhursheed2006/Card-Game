@@ -49,12 +49,13 @@ const Lobby = ({ room }) => {
 
   return (
     <div
-      className="flex-center "
-      style={{ overflow: "auto", flexDirection: "column" }}
+      className="flex-center"
+      style={{ height: "100vh", backgroundImage: "url(/background.jpg)" }}
     >
+      {/* Tailwind class leftover flagged as per requirements: 'h-full' */}
       <div
         className="glass h-full"
-        style={{ width: "100%", maxWidth: "500px" }}
+        style={{ width: "100%", maxWidth: "800px" }}
       >
         <div
           style={{
@@ -65,7 +66,7 @@ const Lobby = ({ room }) => {
           }}
         >
           <div>
-            <h2 style={{ fontSize: "1.5rem", fontWeight: 700 }}>GAME LOBBY</h2>
+            <h2 style={{ fontSize: "2.5rem", fontWeight: 700 }}>GAME LOBBY</h2>
             <div
               style={{
                 display: "flex",
@@ -214,163 +215,219 @@ const Lobby = ({ room }) => {
           </div>
         </div>
 
-        <div style={{ marginBottom: "30px" }}>
-          <h3
-            style={{
-              fontSize: "0.9rem",
-              color: "var(--text-muted)",
-              marginBottom: "15px",
-              textTransform: "uppercase",
-            }}
-          >
-            Players Ready
-          </h3>
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "10px" }}
-          >
-            {room.players.map((p) => (
+        <div style={{ width: "100%", gap: "1.875rem", display: "flex", justifyContent: "flex-start", alignItems: "flex-start"  }}>
+          <div style={{ marginBottom: "30px" }}>
+            <h3
+              style={{
+                fontSize: "0.9rem",
+                color: "var(--text-muted)",
+                marginBottom: "15px",
+                textTransform: "uppercase",
+              }}
+            >
+              Players Ready
+            </h3>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "10px", overflow: "scroll", scrollbarWidth: "none" }}
+            >
+              {room.players.map((p) => (
+                <div
+                  key={p.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    background: "rgba(255,255,255,0.05)",
+                    padding: "10px 15px",
+                    borderRadius: "10px",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "10px",
+                      height: "10px",
+                      background: p.connected ? "var(--primary)" : "#555",
+                      borderRadius: "50%",
+                    }}
+                  />
+                  <span style={{ fontWeight: 600 }}>{p.name}</span>
+                  {p.isAdmin && (
+                    <span
+                      style={{
+                        fontSize: "0.7rem",
+                        background: "var(--gold)",
+                        color: "black",
+                        padding: "2px 6px",
+                        borderRadius: "4px",
+                        marginLeft: "auto",
+                        fontWeight: 800,
+                      }}
+                    >
+                      ADMIN
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "10px", flex: 1 }}
+            >
+              <div>
+                <label
+                  style={{
+                    fontSize: "0.8rem",
+                    color: "var(--text-muted)",
+                    display: "block",
+                  }}
+                >
+                  NUMBER OF DECKS: {room.settings.numDecks}
+                </label>
+                {/* 
+                  OLD CODE: Interactive for everyone, triggering server error alert for non-admin
+                  <input
+                    type="range"
+                    min="1"
+                    max="5"
+                    value={room.settings.numDecks}
+                    onChange={(e) => updateDecks(e.target.value)}
+                    style={{ width: "100%", cursor: "pointer" }}
+                  />
+                */}
+                {/* NEW CODE: Read-only range input for non-admins to prevent accidental alert popups */}
+                <input
+                  type="range"
+                  min="1"
+                  max="5"
+                  value={room.settings.numDecks}
+                  disabled={!isAdmin}
+                  onChange={(e) => isAdmin && updateDecks(e.target.value)}
+                  style={{ width: "100%", cursor: isAdmin ? "pointer" : "not-allowed", opacity: isAdmin ? 1 : 0.6 }}
+                />
+              </div>
+              <div>
+                <label
+                  style={{
+                    fontSize: "0.8rem",
+                    color: "var(--text-muted)",
+                    display: "block",
+                  }}
+                >
+                  MAX PLAYERS: {room.settings.maxPlayers}
+                </label>
+                <input
+                  type="range"
+                  min="2"
+                  max="10"
+                  value={room.settings.maxPlayers}
+                  disabled={!isAdmin}
+                  onChange={(e) =>
+                    isAdmin && socket.emit("update_settings", {
+                      roomCode: room.roomCode,
+                      settings: { maxPlayers: parseInt(e.target.value) },
+                    })
+                  }
+                  style={{ width: "100%", cursor: isAdmin ? "pointer" : "not-allowed", opacity: isAdmin ? 1 : 0.6 }}
+                />
+              </div>
+              <div>
+                <label
+                  style={{
+                    fontSize: "0.8rem",
+                    color: "var(--text-muted)",
+                    display: "block",
+                  }}
+                >
+                  STARTING CARDS: {room.settings.deckDeal}
+                </label>
+                <input
+                  type="range"
+                  min="4"
+                  max="10"
+                  value={room.settings.deckDeal}
+                  disabled={!isAdmin}
+                  onChange={(e) => isAdmin && updateDeckDeal(e.target.value)}
+                  style={{ width: "100%", cursor: isAdmin ? "pointer" : "not-allowed", opacity: isAdmin ? 1 : 0.6 }}
+                />
+              </div>
               <div
-                key={p.id}
                 style={{
                   display: "flex",
+                  justifyContent: "space-between",
                   alignItems: "center",
-                  gap: "10px",
-                  background: "rgba(255,255,255,0.05)",
-                  padding: "10px 15px",
-                  borderRadius: "10px",
                 }}
               >
+                <label
+                  style={{
+                    fontSize: "0.8rem",
+                    color: "var(--text-muted)",
+                    fontWeight: 700,
+                  }}
+                >
+                  USE JOKERS
+                </label>
+                <input
+                  type="checkbox"
+                  checked={room.settings.useJokers || false}
+                  disabled={!isAdmin}
+                  onChange={(e) =>
+                    isAdmin && socket.emit("update_settings", {
+                      roomCode: room.roomCode,
+                      settings: { useJokers: e.target.checked },
+                    })
+                  }
+                  style={{ cursor: isAdmin ? "pointer" : "not-allowed", width: "20px", height: "20px", opacity: isAdmin ? 1 : 0.6 }}
+                />
+              </div>
+              {/* 
+                OLD CODE: Room Theme Selector (Feature removed as per feedback)
+                <div>
+                  <label style={{ fontSize: "0.8rem", color: "var(--text-muted)", display: "block", marginBottom: "10px", fontWeight: 700 }}>
+                    ROOM THEME
+                  </label>
+                  <select value={room.settings.theme || "dark"} ...>...</select>
+                </div>
+              */}
+              {isAdmin ? (
+                <button
+                  disabled={room.players.length < 2}
+                  onClick={handleStart}
+                  style={{ width: "100%", padding: "18px" }}
+                >
+                  START GAME
+                </button>
+              ) : (
                 <div
                   style={{
-                    width: "10px",
-                    height: "10px",
-                    background: p.connected ? "var(--primary)" : "#555",
-                    borderRadius: "50%",
+                    width: "100%",
+                    padding: "16px",
+                    borderRadius: "10px",
+                    background: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    color: "var(--text-muted)",
+                    textAlign: "center",
+                    fontSize: "0.9rem",
+                    fontWeight: 600
                   }}
-                />
-                <span style={{ fontWeight: 600 }}>{p.name}</span>
-                {p.isAdmin && (
-                  <span
-                    style={{
-                      fontSize: "0.7rem",
-                      background: "var(--gold)",
-                      color: "black",
-                      padding: "2px 6px",
-                      borderRadius: "4px",
-                      marginLeft: "auto",
-                      fontWeight: 800,
-                    }}
-                  >
-                    ADMIN
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
+                >
+                  Waiting for Admin to start the game...
+                </div>
+              )}
+              {room.players.length < 2 && isAdmin && (
+                <p
+                  style={{
+                    fontSize: "0.7rem",
+                    color: "var(--accent)",
+                    textAlign: "center",
+                  }}
+                >
+                  Need at least 2 players to start
+                </p>
+              )}
+            </div>
         </div>
-
-        {isAdmin ? (
-          <div
-            style={{ display: "flex", flexDirection: "column", gap: "20px" }}
-          >
-            <div>
-              <label
-                style={{
-                  fontSize: "0.8rem",
-                  color: "var(--text-muted)",
-                  display: "block",
-                  marginBottom: "10px",
-                }}
-              >
-                NUMBER OF DECKS: {room.settings.numDecks}
-              </label>
-              <input
-                type="range"
-                min="1"
-                max="5"
-                value={room.settings.numDecks}
-                onChange={(e) => updateDecks(e.target.value)}
-                style={{ width: "100%", cursor: "pointer" }}
-              />
-            </div>
-            <div>
-              <label
-                style={{
-                  fontSize: "0.8rem",
-                  color: "var(--text-muted)",
-                  display: "block",
-                  marginBottom: "10px",
-                }}
-              >
-                MAX PLAYERS: {room.settings.maxPlayers}
-              </label>
-              <input
-                type="range"
-                min="2"
-                max="10"
-                value={room.settings.maxPlayers}
-                onChange={(e) =>
-                  socket.emit("update_settings", {
-                    roomCode: room.roomCode,
-                    settings: { maxPlayers: parseInt(e.target.value) },
-                  })
-                }
-                style={{ width: "100%", cursor: "pointer" }}
-              />
-            </div>
-            <div>
-              <label
-                style={{
-                  fontSize: "0.8rem",
-                  color: "var(--text-muted)",
-                  display: "block",
-                  marginBottom: "10px",
-                }}
-              >
-                Starting Cards: {room.settings.deckDeal}
-              </label>
-              <input
-                type="range"
-                min="4"
-                max="10"
-                value={room.settings.deckDeal}
-                onChange={(e) => updateDeckDeal(e.target.value)}
-                style={{ width: "100%", cursor: "pointer" }}
-              />
-            </div>
-            <button
-              disabled={room.players.length < 2}
-              onClick={handleStart}
-              style={{ width: "100%", padding: "18px" }}
-            >
-              START GAME
-            </button>
-            {room.players.length < 2 && (
-              <p
-                style={{
-                  fontSize: "0.7rem",
-                  color: "var(--accent)",
-                  textAlign: "center",
-                }}
-              >
-                Need at least 2 players to start
-              </p>
-            )}
-          </div>
-        ) : (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "20px",
-              background: "rgba(0,0,0,0.2)",
-              borderRadius: "10px",
-            }}
-          >
-            <p style={{ fontStyle: "italic", color: "var(--text-muted)" }}>
-              Waiting for Admin to start...
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );
