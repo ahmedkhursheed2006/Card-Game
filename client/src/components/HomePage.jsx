@@ -29,7 +29,7 @@ const HomePage = ({ fixedRoomCode }) => {
   };
 
   return (
-    <div className="flex-center" style={{ height: '100vh', flexDirection: 'column' }}>
+    <div className="flex-center" style={{ height: '100vh', flexDirection: 'column', backgroundImage: 'url(/background.jpg)'}}>
       <h1 className="title">KHOTI</h1>
       
       <div className="glass" style={{ width: '100%', maxWidth: '400px', display: 'flex', flexDirection: 'column', gap: '20px' }}>

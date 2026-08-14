@@ -29,12 +29,16 @@ const SUITS = ["h", "d", "c", "s"];
  * @param {number} [numDecks=1] - The total number of full 52-card decks to combine.
  * @returns {string[]} A single, un-shuffled array of card strings (e.g., ['Ah', 'Ad', ...]).
  */
-function buildDeck(numDecks = 1) {
+function buildDeck(numDecks = 1, useJokers = false) {
   const singleDeck = [];
   for (const rank of RANKS) {
     for (const suit of SUITS) {
       singleDeck.push(`${rank}${suit}`);
     }
+  }
+  if (useJokers) {
+    singleDeck.push('JOKER1');
+    singleDeck.push('JOKER2');
   }
   let deck = [];
   for (let i = 0; i < numDecks; i++) {
@@ -91,6 +95,7 @@ function getSuit(card) {
  */
 function getScore(card) {
   const rank = getRank(card);
+  if (rank === 'JOKER') return 30; // Joker cards are worth 30 points
   if (rank === "K" || rank === "Q" || rank === "J" || rank === "10") return 10;
   if (rank === "A") return 20;
   return 5; // All other cards = 5

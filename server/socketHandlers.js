@@ -5,7 +5,7 @@
 
 import { createRoom, joinRoom, leaveRoom, getRoom, getRoomBySocket, updateSettings, rejoinRoom } from './roomManager.js';
 import { startGame, drawCard, placeCard, advanceTurn } from './gameLogic.js';
-import { getPlayerView } from './gameState.js';
+import { getPlayerView, resetToLobby } from './gameState.js';
 
 /** 
  * Broadcasts the current room state securely to every connected player in that room.
@@ -121,6 +121,25 @@ function registerHandlers(io, socket) {
     broadcastState(io, room);
   });
 
+  // ── restart_game ─────────────────────────────────────────────────
+  /**
+   * Event: restart_game
+   * Payload: { roomCode: string }
+   * Logic: Admin-only. Resets the ended room back to lobby phase.
+   * All players remain (same seats, same admin). Each player's client
+   * will be routed back to the Lobby automatically via the broadcastState
+   * update changing phase from 'ended' → 'lobby'.
+   */
+  socket.on('restart_game', ({ roomCode } = {}) => {
+    const room = getRoom(roomCode);
+    if (!room) return sendError(socket, 'Room not found.');
+    if (room.adminId !== socket.id) return sendError(socket, 'Only the admin can restart the game.');
+    if (room.phase !== 'ended') return sendError(socket, 'Game has not ended yet.');
+
+    resetToLobby(room);
+    broadcastState(io, room);
+  });
+
   // ── draw_card ────────────────────────────────────────────────────
   /**
    * Event: draw_card
@@ -177,6 +196,25 @@ function registerHandlers(io, socket) {
     }
     
     broadcastState(io, room);
+  });
+
+  // ── play_board_sound ────────────────────────────────────────────
+  /**
+   * Event: play_board_sound
+   * Payload: { roomCode: string, soundPath: string, soundLabel: string }
+   * Logic: Broadcasts the sound to all OTHER players in the room.
+   * The sender already plays the sound locally, so we use socket.to()
+   * instead of io.to() to avoid double-playing.
+   */
+  socket.on('play_board_sound', ({ roomCode, soundPath, soundLabel } = {}) => {
+    const room = getRoom(roomCode);
+    if (!room) return;
+    // Broadcast to everyone else in the room (sender already played locally)
+    socket.to(roomCode).emit('board_sound_played', {
+      soundPath,
+      soundLabel,
+      playerId: socket.id,
+    });
   });
 
   // ── disconnect ───────────────────────────────────────────────────
