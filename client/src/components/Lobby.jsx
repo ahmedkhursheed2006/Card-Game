@@ -47,6 +47,14 @@ const Lobby = ({ room }) => {
     });
   };
 
+  const handleAddBot = () => {
+    socket.emit("add_bot", { roomCode: room.roomCode });
+  };
+
+  const handleRemoveBot = (botId) => {
+    socket.emit("remove_bot", { roomCode: room.roomCode, botId });
+  };
+
   return (
     <div
       className="flex-center"
@@ -216,17 +224,37 @@ const Lobby = ({ room }) => {
         </div>
 
         <div style={{ width: "100%", gap: "1.875rem", display: "flex", justifyContent: "flex-start", alignItems: "flex-start"  }}>
-          <div style={{ marginBottom: "30px" }}>
-            <h3
-              style={{
-                fontSize: "0.9rem",
-                color: "var(--text-muted)",
-                marginBottom: "15px",
-                textTransform: "uppercase",
-              }}
-            >
-              Players Ready
-            </h3>
+          <div style={{ marginBottom: "30px", flex: "0 0 240px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px" }}>
+              <h3
+                style={{
+                  fontSize: "0.9rem",
+                  color: "var(--text-muted)",
+                  margin: 0,
+                  textTransform: "uppercase",
+                }}
+              >
+                Players Ready
+              </h3>
+              {isAdmin && room.players.length < room.settings.maxPlayers && (
+                <button
+                  onClick={handleAddBot}
+                  style={{
+                    padding: "4px 10px",
+                    fontSize: "0.75rem",
+                    background: "rgba(142, 68, 173, 0.3)",
+                    border: "1px solid rgba(142, 68, 173, 0.6)",
+                    color: "white",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    boxShadow: "none"
+                  }}
+                  title="Add AI Bot player"
+                >
+                  🤖 + BOT
+                </button>
+              )}
+            </div>
             <div
               style={{ display: "flex", flexDirection: "column", gap: "10px", overflow: "scroll", scrollbarWidth: "none" }}
             >
@@ -250,7 +278,10 @@ const Lobby = ({ room }) => {
                       borderRadius: "50%",
                     }}
                   />
-                  <span style={{ fontWeight: 600 }}>{p.name}</span>
+                  <span style={{ fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                    {p.name}
+                    {p.isBot && <span style={{ fontSize: "0.85rem" }}>🤖</span>}
+                  </span>
                   {p.isAdmin && (
                     <span
                       style={{
@@ -265,6 +296,25 @@ const Lobby = ({ room }) => {
                     >
                       ADMIN
                     </span>
+                  )}
+                  {p.isBot && isAdmin && (
+                    <button
+                      onClick={() => handleRemoveBot(p.id)}
+                      style={{
+                        marginLeft: "auto",
+                        background: "rgba(231, 76, 60, 0.2)",
+                        border: "1px solid rgba(231, 76, 60, 0.5)",
+                        color: "#e74c3c",
+                        padding: "2px 6px",
+                        borderRadius: "4px",
+                        fontSize: "0.7rem",
+                        cursor: "pointer",
+                        boxShadow: "none"
+                      }}
+                      title="Remove Bot"
+                    >
+                      ✕
+                    </button>
                   )}
                 </div>
               ))}

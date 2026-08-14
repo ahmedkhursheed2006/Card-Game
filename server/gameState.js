@@ -49,11 +49,12 @@ function createRoomState(roomCode, adminSocketId, adminName) {
  * @param {boolean} [isAdmin=false] - Whether this player has admin privileges (start game, change settings).
  * @returns {object} A default player object schema.
  */
-function createPlayer(socketId, name, isAdmin = false) {
+function createPlayer(socketId, name, isAdmin = false, isBot = false) {
   return {
     id: socketId,
     name,
     isAdmin,
+    isBot: Boolean(isBot),
     hand: [],
     scoreStack: [],
     lockedRanks: [],   // ranks that are permanently locked

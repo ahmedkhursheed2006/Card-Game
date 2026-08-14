@@ -200,6 +200,7 @@ const GameBoard = ({ room }) => {
       <TurnIndicator
         isMyTurn={isMyTurn}
         currentPlayerName={currentPlayer ? currentPlayer.name : ""}
+        isBot={currentPlayer ? currentPlayer.isBot : false}
         turnPhase={room.turnPhase}
         shake={bannerShake}
       />

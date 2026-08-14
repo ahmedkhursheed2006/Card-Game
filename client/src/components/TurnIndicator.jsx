@@ -11,7 +11,7 @@ import React from 'react';
  *  - turnPhase         {string}  : 'draw' | 'play'
  *  - shake             {boolean} : Triggers banner vibration on invalid interaction
  */
-const TurnIndicator = ({ isMyTurn, currentPlayerName, turnPhase, shake = false }) => {
+const TurnIndicator = ({ isMyTurn, currentPlayerName, isBot = false, turnPhase, shake = false }) => {
  
   
   const phaseText = turnPhase === 'draw' ? 'DRAW A CARD' : 'PLAY A CARD FROM HAND';
@@ -25,7 +25,7 @@ const TurnIndicator = ({ isMyTurn, currentPlayerName, turnPhase, shake = false }
       {isMyTurn ? (
         <span>YOUR TURN — {phaseText}</span>
       ) : (
-        <span>{(currentPlayerName || 'PLAYER').toUpperCase()}'S TURN</span>
+        <span>{isBot ? '🤖 ' : ''}{(currentPlayerName || 'PLAYER').toUpperCase()}'S TURN</span>
       )}
     </div>
   );

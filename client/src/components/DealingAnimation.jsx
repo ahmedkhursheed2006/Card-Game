@@ -62,9 +62,17 @@ const DealingAnimation = ({ room, onComplete }) => {
     });
   }
 
-  // Smooth durations for fluid casino-style dealing
-  const STEP_INTERVAL = 550; // ms between starting new cards
-  const REVEAL_HOLD = 300;   // ms local card pauses in center to reveal
+  // Dynamic durations for fluid dealing at all scale levels
+  const totalCards = dealSequence.length;
+  let STEP_INTERVAL = 450;
+  let REVEAL_HOLD = 250;
+  if (totalCards > 40) {
+    STEP_INTERVAL = 120;
+    REVEAL_HOLD = 80;
+  } else if (totalCards > 20) {
+    STEP_INTERVAL = 250;
+    REVEAL_HOLD = 150;
+  }
 
   useEffect(() => {
     if (dealSequence.length === 0) {
@@ -205,7 +213,7 @@ const DealingAnimation = ({ room, onComplete }) => {
             '--from-y': pos.from.y,
             '--to-x': pos.to.x,
             '--to-y': pos.to.y,
-            '--duration': currentStep.type === 'self' && stage === 'center' ? '350ms' : '500ms'
+            '--duration': currentStep.type === 'self' && stage === 'center' ? `${REVEAL_HOLD}ms` : `${Math.min(STEP_INTERVAL, 400)}ms`
           }}
         >
           <Card card={currentStep.card || 'BACK'} faceUp={currentStep.faceUp} />

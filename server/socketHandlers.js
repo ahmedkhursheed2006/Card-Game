@@ -3,9 +3,10 @@
  * Wires socket events to room/game logic and broadcasts state updates.
  */
 
-import { createRoom, joinRoom, leaveRoom, getRoom, getRoomBySocket, updateSettings, rejoinRoom } from './roomManager.js';
+import { createRoom, joinRoom, leaveRoom, getRoom, getRoomBySocket, updateSettings, rejoinRoom, addBot, removeBot } from './roomManager.js';
 import { startGame, drawCard, placeCard, advanceTurn } from './gameLogic.js';
 import { getPlayerView, resetToLobby } from './gameState.js';
+import { scheduleBotTurn, calculateDealingDelay } from './botLogic.js';
 
 /** 
  * Broadcasts the current room state securely to every connected player in that room.
@@ -18,6 +19,20 @@ function broadcastState(io, room) {
   for (const player of room.players) {
     const view = getPlayerView(room, player.id);
     io.to(player.id).emit('game_state', view);
+  }
+}
+
+/**
+ * Checks if current turn belongs to a bot and schedules turn execution.
+ * If isStartGame is true, delays turn execution until client card dealing animation finishes.
+ */
+function checkAndTriggerBotTurn(io, room, isStartGame = false) {
+  if (room && room.phase === 'playing') {
+    const currentPlayer = room.players[room.turnIndex];
+    if (currentPlayer && currentPlayer.isBot) {
+      const delay = isStartGame ? calculateDealingDelay(room) : 1100;
+      scheduleBotTurn(io, room.roomCode, delay);
+    }
   }
 }
 
@@ -55,6 +70,61 @@ function registerHandlers(io, socket) {
     socket.join(room.roomCode);
     socket.emit('room_created', { roomCode: room.roomCode });
     broadcastState(io, room);
+  });
+
+  // ── create_single_player ──────────────────────────────────────────
+  /**
+   * Event: create_single_player
+   * Payload: { playerName: string }
+   * Logic: Creates a new room and automatically adds 3 AI bots to launch a single-player game lobby.
+   */
+  socket.on('create_single_player', ({ playerName } = {}) => {
+    if (!playerName || !playerName.trim()) {
+      return sendError(socket, 'Player name is required.');
+    }
+
+    const room = createRoom(socket.id, playerName.trim());
+    addBot(room.roomCode);
+    addBot(room.roomCode);
+    addBot(room.roomCode);
+
+    socket.join(room.roomCode);
+    socket.emit('room_created', { roomCode: room.roomCode });
+    broadcastState(io, room);
+  });
+
+  // ── add_bot ──────────────────────────────────────────────────────
+  /**
+   * Event: add_bot
+   * Payload: { roomCode: string }
+   * Logic: Admin-only. Adds an AI bot to the room lobby.
+   */
+  socket.on('add_bot', ({ roomCode } = {}) => {
+    const room = getRoom(roomCode);
+    if (!room) return sendError(socket, 'Room not found.');
+    if (room.adminId !== socket.id) return sendError(socket, 'Only the admin can add bots.');
+
+    const result = addBot(roomCode);
+    if (!result.success) return sendError(socket, result.error);
+
+    broadcastState(io, result.room);
+  });
+
+  // ── remove_bot ───────────────────────────────────────────────────
+  /**
+   * Event: remove_bot
+   * Payload: { roomCode: string, botId: string }
+   * Logic: Admin-only. Removes an AI bot from the room lobby.
+   */
+  socket.on('remove_bot', ({ roomCode, botId } = {}) => {
+    const room = getRoom(roomCode);
+    if (!room) return sendError(socket, 'Room not found.');
+    if (room.adminId !== socket.id) return sendError(socket, 'Only the admin can remove bots.');
+
+    const result = removeBot(roomCode, botId);
+    if (!result.success) return sendError(socket, result.error);
+
+    broadcastState(io, result.room);
   });
 
   // ── join_room ────────────────────────────────────────────────────
@@ -119,6 +189,7 @@ function registerHandlers(io, socket) {
 
     startGame(room);
     broadcastState(io, room);
+    checkAndTriggerBotTurn(io, room, true);
   });
 
   // ── restart_game ─────────────────────────────────────────────────
@@ -162,6 +233,7 @@ function registerHandlers(io, socket) {
     });
 
     broadcastState(io, room);
+    checkAndTriggerBotTurn(io, room);
   });
 
   // ── place_card ───────────────────────────────────────────────────
@@ -196,6 +268,7 @@ function registerHandlers(io, socket) {
     }
     
     broadcastState(io, room);
+    checkAndTriggerBotTurn(io, room);
   });
 
   // ── play_board_sound ────────────────────────────────────────────
@@ -235,6 +308,7 @@ function registerHandlers(io, socket) {
         if (currentPlayer && currentPlayer.id === socket.id) {
           // advanceTurn imported at top
           advanceTurn(room);
+          checkAndTriggerBotTurn(io, room);
         }
       } else {
         io.to(roomCode).emit('player_left', { socketId: socket.id });
@@ -248,3 +322,4 @@ function registerHandlers(io, socket) {
 }
 
 export { registerHandlers };
+
